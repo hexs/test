@@ -1,9 +1,10 @@
 import subprocess
 import requests
+
 BLACK = '\033[90m'
-FAIL = '\033[91m'
+RED = '\033[91m'
 GREEN = '\033[92m'
-WARNING = '\033[93m'
+YELLOW = '\033[93m'
 BLUE = '\033[94m'
 PINK = '\033[95m'
 CYAN = '\033[96m'
@@ -12,20 +13,19 @@ BOLD = '\033[1m'
 ITALICIZED = '\033[3m'
 UNDERLINE = '\033[4m'
 
+
 def is_git_installed():
     try:
-        # Run 'git --version' command and capture the output
         result = subprocess.run(['git', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-        # Check if the return code is 0, indicating success
         if result.returncode == 0:
-            print("Git is installed. Version:", result.stdout.strip())
+            print(f"{GREEN}{ITALICIZED}Git is installed. Version:{ENDC}", result.stdout.strip())
             return True
         else:
-            print("Git is not installed.")
+            print(f"{RED}{ITALICIZED}Git is not installed.{ENDC}")
             return False
     except FileNotFoundError:
-        print("Git is not installed.")
+        print(f"{RED}{ITALICIZED}Git is not installed.{ENDC}")
         return False
 
 
@@ -55,7 +55,7 @@ def get_local_commit_sha():
 def git_pull():
     try:
         subprocess.run(['git', 'pull', 'origin', 'main'], check=True)
-        print("Git pull successful.")
+        print(f"{GREEN}{ITALICIZED}Git pull successful.{ENDC}")
     except subprocess.CalledProcessError as e:
         raise Exception(f"Git pull failed. Error: {e.stderr}")
 
@@ -69,9 +69,9 @@ if is_git_installed():
         latest_commit = get_latest_commit_sha(repo_owner, repo_name)
 
         if local_commit != latest_commit:
-            print("Local and remote commits are not the same. Performing git pull.")
+            print(f"Local and remote commits are {RED}{ITALICIZED}not the same. Performing git pull.{ENDC}")
             git_pull()
         else:
-            print("Local and remote commits are already in sync.")
+            print(f"Local and remote commits are {GREEN}{ITALICIZED}already in sync.{ENDC}")
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"{RED}{ITALICIZED}Error:{ENDC} {RED}{str(e)}{ENDC}")
