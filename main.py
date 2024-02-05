@@ -1,17 +1,33 @@
+import os
 import subprocess
-import requests
+import socket
+import sys
 
-BLACK = '\033[90m'
-RED = '\033[91m'
-GREEN = '\033[92m'
-YELLOW = '\033[93m'
-BLUE = '\033[94m'
-PINK = '\033[95m'
-CYAN = '\033[96m'
-ENDC = '\033[0m'
-BOLD = '\033[1m'
-ITALICIZED = '\033[3m'
-UNDERLINE = '\033[4m'
+from TextColor import *
+from InstallPackage import installed_packages,upgrade_pip
+
+
+def is_internet_available():
+    try:
+        socket.create_connection(("1.1.1.1", 80), timeout=3)
+        print(f"{GREEN}{ITALICIZED}Internet is available.{ENDC}")
+        return True
+    except OSError:
+        print(f"{RED}{ITALICIZED}Internet is not available.{ENDC}")
+        return False
+
+
+def install_requests_if_it_is_not_installed():
+    if 'requests' not in installed_packages():
+        try:
+            prin(BLUE)
+            subprocess.run(["pip", "install", "requests"], check=True)
+            print(f"{UNDERLINE}requests installed successfully.")
+            prin(ENDC)
+        except Exception as e:
+            prin(RED)
+            print(f"Failed to install requests. Error: {UNDERLINE}{str(e)}")
+            prin(ENDC)
 
 
 def is_git_installed():
@@ -30,6 +46,8 @@ def is_git_installed():
 
 
 def get_latest_commit_sha(owner, repo, branch='main'):
+    import requests
+
     api_url = f'https://api.github.com/repos/{owner}/{repo}/commits/{branch}'
     response = requests.get(api_url)
 
@@ -59,19 +77,53 @@ def git_pull():
     except subprocess.CalledProcessError as e:
         raise Exception(f"Git pull failed. Error: {e.stderr}")
 
+def is_venv_present():
+    venv_activate_script = '.venv/Scripts/activate.bat'
+    return os.path.exists(venv_activate_script)
 
-if is_git_installed():
-    repo_owner = 'hexs'
-    repo_name = 'test'
+def create_venv():
+    try:
+        subprocess.run([sys.executable, "-m", "venv", ".venv"], check=True)
+        print("Virtual environment (.venv) created successfully.")
+    except Exception as e:
+        print(f"Failed to create virtual environment. Error: {str(e)}")
+def activate_venv_and_run_program(main_py_path):
+    venv_activate_script = '.venv/Scripts/activate.bat'
+    if not os.path.exists(venv_activate_script):
+        print(f"Error: Virtual environment activate script not found at {venv_activate_script}")
+        sys.exit(1)
+
+    activate_cmd = f'call {venv_activate_script}'
+    python_cmd = 'python'
+    combined_command = f'{activate_cmd} && {python_cmd} {main_py_path}'
 
     try:
-        local_commit = get_local_commit_sha()
-        latest_commit = get_latest_commit_sha(repo_owner, repo_name)
+        subprocess.run(combined_command, shell=True, check=True)
+    except subprocess.CalledProcessError as e:
+        print(RED, f"Error executing main.py: {e}", ENDC, sep='')
 
-        if local_commit != latest_commit:
-            print(f"Local and remote commits are {RED}{ITALICIZED}not the same. Performing git pull.{ENDC}")
-            git_pull()
-        else:
-            print(f"Local and remote commits are {GREEN}{ITALICIZED}already in sync.{ENDC}")
-    except Exception as e:
-        print(f"{RED}{ITALICIZED}Error:{ENDC} {RED}{str(e)}{ENDC}")
+
+def update():
+    install_requests_if_it_is_not_installed()
+    if is_internet_available() and is_git_installed():
+        owner = 'hexs'
+        repo = 'test'
+        try:
+            local_commit = get_local_commit_sha()
+            latest_commit = get_latest_commit_sha(owner, repo)
+
+            if local_commit != latest_commit:
+                print(f"Local and remote commits are {RED}{ITALICIZED}not the same. Performing git pull.{ENDC}")
+                git_pull()
+            else:
+                print(f"Local and remote commits are {GREEN}{ITALICIZED}already in sync.{ENDC}")
+        except Exception as e:
+            print(f"{RED}{ITALICIZED}Error:{ENDC} {RED}{str(e)}{ENDC}")
+
+
+if __name__ == '__main__':
+    update()
+    if not is_venv_present():
+        create_venv()
+    upgrade_pip()
+    activate_venv_and_run_program('InstallPackage.py')
