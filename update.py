@@ -4,7 +4,7 @@ import socket
 import sys
 
 from TextColor import *
-from InstallPackage import installed_packages,upgrade_pip
+from InstallPackage import installed_packages, upgrade_pip
 
 
 def is_internet_available():
@@ -77,9 +77,11 @@ def git_pull():
     except subprocess.CalledProcessError as e:
         raise Exception(f"Git pull failed. Error: {e.stderr}")
 
+
 def is_venv_present():
     venv_activate_script = '.venv/Scripts/activate.bat'
     return os.path.exists(venv_activate_script)
+
 
 def create_venv():
     try:
@@ -87,6 +89,8 @@ def create_venv():
         print("Virtual environment (.venv) created successfully.")
     except Exception as e:
         print(f"Failed to create virtual environment. Error: {str(e)}")
+
+
 def activate_venv_and_run_program(main_py_path):
     venv_activate_script = '.venv/Scripts/activate.bat'
     if not os.path.exists(venv_activate_script):
@@ -113,7 +117,7 @@ def update():
             latest_commit = get_latest_commit_sha(owner, repo)
 
             if local_commit != latest_commit:
-                print(f"Local and remote commits are {RED}{ITALICIZED}not the same. Performing git pull.{ENDC}")
+                print(f"Local and remote commits are {YELLOW}{ITALICIZED}not the same. Performing git pull.{ENDC}")
                 git_pull()
             else:
                 print(f"Local and remote commits are {GREEN}{ITALICIZED}already in sync.{ENDC}")
